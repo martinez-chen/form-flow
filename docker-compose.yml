@@ -1,0 +1,128 @@
+version: '3.8'
+
+services:
+  # PostgreSQL 資料庫
+  postgres:
+    image: postgres:15-alpine
+    container_name: formflow-postgres
+    environment:
+      POSTGRES_DB: formflow
+      POSTGRES_USER: formflow
+      POSTGRES_PASSWORD: formflow123
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - formflow-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U formflow -d formflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis 快取
+  redis:
+    image: redis:7-alpine
+    container_name: formflow-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - formflow-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # RabbitMQ 消息隊列
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: formflow-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: formflow
+      RABBITMQ_DEFAULT_PASS: formflow123
+      RABBITMQ_DEFAULT_VHOST: /
+    ports:
+      - "5672:5672"   # AMQP port
+      - "15672:15672" # Management UI port
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - formflow-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # pgAdmin (PostgreSQL Web管理工具)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: formflow-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@formflow.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - formflow-network
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # FormFlow 應用程式 (可選，用於完整部署)
+  # formflow-app:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: formflow-app
+  #   environment:
+  #     SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/formflow
+  #     SPRING_DATASOURCE_USERNAME: formflow
+  #     SPRING_DATASOURCE_PASSWORD: formflow123
+  #     SPRING_REDIS_HOST: redis
+  #     SPRING_RABBITMQ_HOST: rabbitmq
+  #     SPRING_RABBITMQ_USERNAME: formflow
+  #     SPRING_RABBITMQ_PASSWORD: formflow123
+  #   ports:
+  #     - "8080:8080"
+  #   networks:
+  #     - formflow-network
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #     rabbitmq:
+  #       condition: service_healthy
+  #   restart: unless-stopped
+
+# 網絡配置
+networks:
+  formflow-network:
+    driver: bridge
+    name: formflow-network
+
+# 數據卷配置
+volumes:
+  postgres_data:
+    name: formflow-postgres-data
+  redis_data:
+    name: formflow-redis-data
+  rabbitmq_data:
+    name: formflow-rabbitmq-data
+  pgadmin_data:
+    name: formflow-pgadmin-data

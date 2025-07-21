@@ -31,11 +31,9 @@ public class OrderEntity {
     private String category;
     
     @Column(nullable = false, length = 20)
-    @Enumerated(EnumType.STRING)
     private String priority;
     
     @Column(nullable = false, length = 20)
-    @Enumerated(EnumType.STRING)
     private String status;
     
     @Column(name = "creator_id", nullable = false)

@@ -6,6 +6,13 @@ import com.formflow.application.order.dto.OrderDTO;
 import com.formflow.application.order.service.OrderApplicationService;
 import com.formflow.domain.order.model.Order;
 import com.formflow.domain.order.repository.OrderRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +24,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Tag(name = "工單管理", description = "工單管理相關API，提供工單的創建、查詢、更新等功能")
 @RestController
 @RequestMapping("/api/v1/orders")
 public class OrderController {
@@ -29,6 +37,13 @@ public class OrderController {
         this.orderRepository = orderRepository;
     }
 
+    @Operation(summary = "創建工單", description = "創建新的工單，支援指派給群組或團隊")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "工單創建成功", 
+                    content = @Content(schema = @Schema(implementation = Map.class))),
+        @ApiResponse(responseCode = "400", description = "請求參數無效"),
+        @ApiResponse(responseCode = "500", description = "服務器內部錯誤")
+    })
     @PostMapping
     public ResponseEntity<Map<String, Object>> createOrder(@Valid @RequestBody CreateOrderRequest request) {
         try {
@@ -58,8 +73,14 @@ public class OrderController {
         }
     }
 
+    @Operation(summary = "根據ID獲取工單", description = "根據工單ID獲取工單詳細信息")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "成功獲取工單信息",
+                    content = @Content(schema = @Schema(implementation = OrderDTO.class))),
+        @ApiResponse(responseCode = "404", description = "工單不存在")
+    })
     @GetMapping("/{id}")
-    public ResponseEntity<OrderDTO> getOrder(@PathVariable Long id) {
+    public ResponseEntity<OrderDTO> getOrder(@Parameter(description = "工單ID") @PathVariable Long id) {
         Optional<Order> orderOpt = orderRepository.findById(id);
         
         if (orderOpt.isEmpty()) {
@@ -72,6 +93,9 @@ public class OrderController {
         return ResponseEntity.ok(dto);
     }
 
+    @Operation(summary = "獲取所有工單", description = "獲取系統中所有工單的列表")
+    @ApiResponse(responseCode = "200", description = "成功獲取工單列表",
+                content = @Content(schema = @Schema(implementation = OrderDTO.class)))
     @GetMapping
     public ResponseEntity<List<OrderDTO>> getAllOrders() {
         List<Order> orders = orderRepository.findAll();
@@ -82,8 +106,9 @@ public class OrderController {
         return ResponseEntity.ok(dtos);
     }
 
+    @Operation(summary = "獲取我創建的工單", description = "根據創建者ID獲取該用戶創建的所有工單")
     @GetMapping("/my-orders")
-    public ResponseEntity<List<OrderDTO>> getMyOrders(@RequestParam Long creatorId) {
+    public ResponseEntity<List<OrderDTO>> getMyOrders(@Parameter(description = "創建者ID") @RequestParam Long creatorId) {
         List<Order> orders = orderRepository.findByCreatorId(creatorId);
         List<OrderDTO> dtos = orders.stream()
                 .map(this::convertToDTO)
@@ -92,8 +117,9 @@ public class OrderController {
         return ResponseEntity.ok(dtos);
     }
 
+    @Operation(summary = "獲取指派給我的工單", description = "根據被指派者ID獲取指派給該用戶的所有工單")
     @GetMapping("/my-assignments")
-    public ResponseEntity<List<OrderDTO>> getMyAssignments(@RequestParam Long assigneeId) {
+    public ResponseEntity<List<OrderDTO>> getMyAssignments(@Parameter(description = "被指派者ID") @RequestParam Long assigneeId) {
         List<Order> orders = orderRepository.findByAssigneeId(assigneeId);
         List<OrderDTO> dtos = orders.stream()
                 .map(this::convertToDTO)

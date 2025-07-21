@@ -10,7 +10,7 @@
 /Users/martinez/IdeaProjects/form-flow/src/main/java/com/formflow/domain/order/model/Priority.java
 /Users/martinez/IdeaProjects/form-flow/src/main/java/com/formflow/domain/order/model/Category.java
 /Users/martinez/IdeaProjects/form-flow/src/main/java/com/formflow/application/order/dto/OrderDTO.java
-/Users/martinez/IdeaProjects/form-flow/src/main/java/com/example/formflow/FormFlowApplication.java
+/Users/martinez/IdeaProjects/form-flow/src/main/java/com/formflow/config/OpenApiConfig.java
 /Users/martinez/IdeaProjects/form-flow/src/main/java/com/formflow/FormFlowApplication.java
 /Users/martinez/IdeaProjects/form-flow/src/main/java/com/formflow/application/order/dto/CreateOrderRequest.java
 /Users/martinez/IdeaProjects/form-flow/src/main/java/com/formflow/domain/order/model/Status.java

@@ -5,7 +5,9 @@ import com.formflow.domain.order.model.Category;
 import com.formflow.domain.order.model.Order;
 import com.formflow.domain.order.model.Priority;
 import com.formflow.domain.order.repository.OrderRepository;
+import org.springframework.stereotype.Service;
 
+@Service
 public class OrderApplicationService {
     private final OrderRepository orderRepository;
 
