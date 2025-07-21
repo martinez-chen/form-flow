@@ -1,9 +1,0 @@
-/Users/martinez/IdeaProjects/form-flow/src/test/java/com/formflow/application/order/command/CreateOrderCommandTest.java
-/Users/martinez/IdeaProjects/form-flow/src/test/java/com/formflow/domain/order/model/OrderTest.java
-/Users/martinez/IdeaProjects/form-flow/src/test/java/com/formflow/domain/order/model/StatusTest.java
-/Users/martinez/IdeaProjects/form-flow/src/test/java/com/formflow/domain/order/model/PriorityTest.java
-/Users/martinez/IdeaProjects/form-flow/src/test/java/com/formflow/infrastructure/persistence/jpa/repository/OrderRepositoryImplTest.java
-/Users/martinez/IdeaProjects/form-flow/src/test/java/com/formflow/application/order/service/OrderApplicationServiceTest.java
-/Users/martinez/IdeaProjects/form-flow/src/test/java/com/formflow/interfaces/rest/controller/OrderControllerTest.java
-/Users/martinez/IdeaProjects/form-flow/src/test/java/com/formflow/domain/order/model/CategoryTest.java
-/Users/martinez/IdeaProjects/form-flow/src/test/java/com/formflow/infrastructure/persistence/jpa/entity/OrderEntityTest.java
