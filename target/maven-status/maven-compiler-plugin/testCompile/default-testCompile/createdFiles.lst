@@ -1,0 +1,9 @@
+com/formflow/application/order/service/OrderApplicationServiceTest.class
+com/formflow/domain/order/model/StatusTest.class
+com/formflow/interfaces/rest/controller/OrderControllerTest.class
+com/formflow/infrastructure/persistence/jpa/entity/OrderEntityTest.class
+com/formflow/domain/order/model/OrderTest.class
+com/formflow/application/order/command/CreateOrderCommandTest.class
+com/formflow/infrastructure/persistence/jpa/repository/OrderRepositoryImplTest.class
+com/formflow/domain/order/model/CategoryTest.class
+com/formflow/domain/order/model/PriorityTest.class
