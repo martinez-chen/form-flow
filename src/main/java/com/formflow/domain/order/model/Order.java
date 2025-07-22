@@ -83,6 +83,15 @@ public class Order {
     }
 
     public void assignToGroup(Long groupId) {
+        if (groupId == null) {
+            throw new IllegalArgumentException("Group ID cannot be null");
+        }
+        if (this.status.isCompleted()) {
+            throw new IllegalStateException("Cannot assign completed order to group");
+        }
+        if (this.status.isCancelled()) {
+            throw new IllegalStateException("Cannot assign cancelled order to group");
+        }
         this.groupId = groupId;
         this.updatedAt = LocalDateTime.now();
     }
