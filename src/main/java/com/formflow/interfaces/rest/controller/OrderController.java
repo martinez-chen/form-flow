@@ -1,6 +1,8 @@
 package com.formflow.interfaces.rest.controller;
 
+import com.formflow.application.order.command.AssignOrderToGroupCommand;
 import com.formflow.application.order.command.CreateOrderCommand;
+import com.formflow.application.order.dto.AssignOrderToGroupRequest;
 import com.formflow.application.order.dto.CreateOrderRequest;
 import com.formflow.application.order.dto.OrderDTO;
 import com.formflow.application.order.service.OrderApplicationService;
@@ -126,6 +128,52 @@ public class OrderController {
                 .collect(Collectors.toList());
         
         return ResponseEntity.ok(dtos);
+    }
+
+    @Operation(summary = "指派工單給群組", description = "將工單指派給指定的群組")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "工單成功指派給群組"),
+        @ApiResponse(responseCode = "400", description = "請求參數無效"),
+        @ApiResponse(responseCode = "404", description = "工單不存在"),
+        @ApiResponse(responseCode = "409", description = "工單狀態不允許指派")
+    })
+    @PutMapping("/{id}/assign-to-group")
+    public ResponseEntity<Map<String, Object>> assignOrderToGroup(
+            @Parameter(description = "工單ID") @PathVariable Long id,
+            @Valid @RequestBody AssignOrderToGroupRequest request) {
+        try {
+            AssignOrderToGroupCommand command = new AssignOrderToGroupCommand(
+                id,
+                request.getGroupId(),
+                request.getRequesterId()
+            );
+
+            orderApplicationService.assignOrderToGroup(command);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Order assigned to group successfully");
+            return ResponseEntity.ok(response);
+
+        } catch (IllegalArgumentException e) {
+            if (e.getMessage().contains("not found")) {
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("error", e.getMessage());
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+            } else {
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("error", e.getMessage());
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+            }
+        } catch (IllegalStateException e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Failed to assign order to group");
+            errorResponse.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
     }
 
     private OrderDTO convertToDTO(Order order) {

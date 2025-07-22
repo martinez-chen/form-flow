@@ -1,5 +1,6 @@
 package com.formflow.application.order.service;
 
+import com.formflow.application.order.command.AssignOrderToGroupCommand;
 import com.formflow.application.order.command.CreateOrderCommand;
 import com.formflow.domain.order.model.Category;
 import com.formflow.domain.order.model.Order;
@@ -41,5 +42,20 @@ public class OrderApplicationService {
 
         Order savedOrder = orderRepository.save(order);
         return savedOrder.getId();
+    }
+
+    public void assignOrderToGroup(AssignOrderToGroupCommand command) {
+        if (command == null) {
+            throw new IllegalArgumentException("Command cannot be null");
+        }
+        if (command.getOrderId() == null) {
+            throw new IllegalArgumentException("Order ID cannot be null");
+        }
+
+        Order order = orderRepository.findById(command.getOrderId())
+                .orElseThrow(() -> new IllegalArgumentException("Order not found: " + command.getOrderId()));
+
+        order.assignToGroup(command.getGroupId());
+        orderRepository.save(order);
     }
 }

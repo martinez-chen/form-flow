@@ -1,0 +1,469 @@
+openapi: 3.0.3
+info:
+  title: Form Flow API
+  description: |
+    Form Flow 工單管理系統 API 文檔
+    
+    ## 功能概述
+    - 工單的創建、查詢、更新
+    - 群組指派功能
+    - 工單狀態管理
+    - 多種查詢方式支援
+    
+    ## 認證方式
+    - 使用 Spring Security 進行身份驗證
+    - 需要在請求頭中包含有效的認證信息
+    
+    ## 錯誤處理
+    - 400: 請求參數無效
+    - 401: 未經授權
+    - 404: 資源不存在
+    - 409: 資源衝突
+    - 500: 服務器內部錯誤
+  version: 1.0.0
+  contact:
+    name: Form Flow Team
+    email: support@formflow.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8080
+    description: 開發環境
+  - url: https://api.formflow.com
+    description: 生產環境
+
+tags:
+  - name: 工單管理
+    description: 工單管理相關API，提供工單的創建、查詢、更新等功能
+
+paths:
+  /api/v1/orders:
+    post:
+      tags:
+        - 工單管理
+      summary: 創建工單
+      description: 創建新的工單，支援指派給群組或團隊
+      operationId: createOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+            examples:
+              basic_order:
+                summary: 基本工單
+                value:
+                  title: "修復登入問題"
+                  description: "用戶反映無法正常登入系統"
+                  category: "BUG"
+                  priority: "HIGH"
+                  creatorId: 1
+              order_with_group:
+                summary: 指派給群組的工單
+                value:
+                  title: "開發新功能"
+                  description: "實作用戶個人資料管理功能"
+                  category: "FEATURE"
+                  priority: "MEDIUM"
+                  creatorId: 2
+                  groupId: 100
+                  dueDate: "2024-01-15T10:00:00"
+      responses:
+        '201':
+          description: 工單創建成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    format: int64
+                    description: 新創建的工單ID
+                    example: 1
+                  message:
+                    type: string
+                    description: 成功訊息
+                    example: "Order created successfully"
+        '400':
+          description: 請求參數無效
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '500':
+          description: 服務器內部錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - basicAuth: []
+
+    get:
+      tags:
+        - 工單管理
+      summary: 獲取所有工單
+      description: 獲取系統中所有工單的列表
+      operationId: getAllOrders
+      responses:
+        '200':
+          description: 成功獲取工單列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderDTO'
+      security:
+        - basicAuth: []
+
+  /api/v1/orders/{id}:
+    get:
+      tags:
+        - 工單管理
+      summary: 根據ID獲取工單
+      description: 根據工單ID獲取工單詳細信息
+      operationId: getOrder
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 工單ID
+          schema:
+            type: integer
+            format: int64
+            example: 1
+      responses:
+        '200':
+          description: 成功獲取工單信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderDTO'
+        '404':
+          description: 工單不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - basicAuth: []
+
+  /api/v1/orders/{id}/assign-to-group:
+    put:
+      tags:
+        - 工單管理
+      summary: 指派工單給群組
+      description: 將工單指派給指定的群組
+      operationId: assignOrderToGroup
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 工單ID
+          schema:
+            type: integer
+            format: int64
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignOrderToGroupRequest'
+            example:
+              groupId: 100
+              requesterId: 50
+      responses:
+        '200':
+          description: 工單成功指派給群組
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Order assigned to group successfully"
+        '400':
+          description: 請求參數無效
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '404':
+          description: 工單不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                order_not_found:
+                  summary: 工單不存在
+                  value:
+                    error: "Order not found: 999"
+        '409':
+          description: 工單狀態不允許指派
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                completed_order:
+                  summary: 已完成的工單
+                  value:
+                    error: "Cannot assign completed order to group"
+                cancelled_order:
+                  summary: 已取消的工單
+                  value:
+                    error: "Cannot assign cancelled order to group"
+      security:
+        - basicAuth: []
+
+  /api/v1/orders/my-orders:
+    get:
+      tags:
+        - 工單管理
+      summary: 獲取我創建的工單
+      description: 根據創建者ID獲取該用戶創建的所有工單
+      operationId: getMyOrders
+      parameters:
+        - name: creatorId
+          in: query
+          required: true
+          description: 創建者ID
+          schema:
+            type: integer
+            format: int64
+            example: 1
+      responses:
+        '200':
+          description: 成功獲取工單列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderDTO'
+      security:
+        - basicAuth: []
+
+  /api/v1/orders/my-assignments:
+    get:
+      tags:
+        - 工單管理
+      summary: 獲取指派給我的工單
+      description: 根據被指派者ID獲取指派給該用戶的所有工單
+      operationId: getMyAssignments
+      parameters:
+        - name: assigneeId
+          in: query
+          required: true
+          description: 被指派者ID
+          schema:
+            type: integer
+            format: int64
+            example: 2
+      responses:
+        '200':
+          description: 成功獲取工單列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderDTO'
+      security:
+        - basicAuth: []
+
+components:
+  schemas:
+    CreateOrderRequest:
+      type: object
+      required:
+        - title
+        - category
+        - priority
+        - creatorId
+      properties:
+        title:
+          type: string
+          maxLength: 200
+          description: 工單標題
+          example: "修復登入問題"
+        description:
+          type: string
+          maxLength: 5000
+          description: 工單描述
+          example: "用戶反映無法正常登入系統，需要檢查認證流程"
+        category:
+          type: string
+          maxLength: 50
+          description: 工單分類
+          enum: ["BUG", "FEATURE", "TASK", "IMPROVEMENT"]
+          example: "BUG"
+        priority:
+          type: string
+          description: 優先級
+          enum: ["LOW", "MEDIUM", "HIGH", "URGENT"]
+          example: "HIGH"
+        creatorId:
+          type: integer
+          format: int64
+          description: 創建者ID
+          example: 1
+        groupId:
+          type: integer
+          format: int64
+          description: 群組ID（可選）
+          example: 100
+        teamId:
+          type: integer
+          format: int64
+          description: 團隊ID（可選）
+          example: 200
+        dueDate:
+          type: string
+          format: date-time
+          description: 截止日期（可選）
+          example: "2024-01-15T10:00:00"
+
+    AssignOrderToGroupRequest:
+      type: object
+      required:
+        - groupId
+        - requesterId
+      properties:
+        groupId:
+          type: integer
+          format: int64
+          description: 目標群組ID
+          example: 100
+        requesterId:
+          type: integer
+          format: int64
+          description: 請求者ID
+          example: 50
+
+    OrderDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 工單ID
+          example: 1
+        title:
+          type: string
+          description: 工單標題
+          example: "修復登入問題"
+        description:
+          type: string
+          description: 工單描述
+          example: "用戶反映無法正常登入系統"
+        category:
+          type: string
+          description: 工單分類
+          example: "BUG"
+        priority:
+          type: string
+          description: 優先級
+          example: "HIGH"
+        status:
+          type: string
+          description: 工單狀態
+          enum: ["PENDING", "ASSIGNED", "IN_PROGRESS", "COMPLETED", "CANCELLED"]
+          example: "PENDING"
+        creatorId:
+          type: integer
+          format: int64
+          description: 創建者ID
+          example: 1
+        assigneeId:
+          type: integer
+          format: int64
+          description: 被指派者ID
+          example: 2
+        groupId:
+          type: integer
+          format: int64
+          description: 群組ID
+          example: 100
+        teamId:
+          type: integer
+          format: int64
+          description: 團隊ID
+          example: 200
+        dueDate:
+          type: string
+          format: date-time
+          description: 截止日期
+          example: "2024-01-15T10:00:00"
+        createdAt:
+          type: string
+          format: date-time
+          description: 創建時間
+          example: "2024-01-01T09:00:00"
+        updatedAt:
+          type: string
+          format: date-time
+          description: 更新時間
+          example: "2024-01-01T10:00:00"
+        completedAt:
+          type: string
+          format: date-time
+          description: 完成時間
+          example: "2024-01-15T15:30:00"
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: 錯誤訊息
+          example: "Order not found"
+        message:
+          type: string
+          description: 詳細訊息
+          example: "Order with ID 999 does not exist"
+        timestamp:
+          type: string
+          format: date-time
+          description: 錯誤發生時間
+          example: "2024-01-01T10:00:00Z"
+
+    ValidationError:
+      type: object
+      properties:
+        error:
+          type: string
+          description: 錯誤類型
+          example: "Validation failed"
+        message:
+          type: string
+          description: 驗證錯誤詳情
+          example: "Title cannot be blank"
+        fields:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: "title"
+              message:
+                type: string
+                example: "Title cannot be blank"
+
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+      description: HTTP Basic Authentication
+
+security:
+  - basicAuth: []
