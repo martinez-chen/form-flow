@@ -1,7 +1,9 @@
 package com.formflow.domain.order.model;
 
+import lombok.Getter;
 import java.util.Objects;
 
+@Getter
 public class Category {
     private final String value;
 
@@ -24,9 +26,6 @@ public class Category {
                 .replaceAll("\\s+", "_");
     }
 
-    public String getValue() {
-        return value;
-    }
 
     @Override
     public boolean equals(Object o) {

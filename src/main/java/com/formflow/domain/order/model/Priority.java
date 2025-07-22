@@ -1,8 +1,10 @@
 package com.formflow.domain.order.model;
 
+import lombok.Getter;
 import java.util.Objects;
 import java.util.Set;
 
+@Getter
 public class Priority {
     private static final Set<String> VALID_VALUES = Set.of("LOW", "MEDIUM", "HIGH", "URGENT");
     
@@ -41,9 +43,6 @@ public class Priority {
         return new Priority("URGENT");
     }
 
-    public String getValue() {
-        return value;
-    }
 
     @Override
     public boolean equals(Object o) {
