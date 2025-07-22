@@ -1,8 +1,10 @@
 package com.formflow.domain.order.model;
 
+import lombok.Getter;
 import java.util.Objects;
 import java.util.Set;
 
+@Getter
 public class Status {
     private static final Set<String> VALID_VALUES = Set.of("PENDING", "ASSIGNED", "IN_PROGRESS", "COMPLETED", "CANCELLED");
     
@@ -45,9 +47,6 @@ public class Status {
         return new Status("CANCELLED");
     }
 
-    public String getValue() {
-        return value;
-    }
 
     public boolean isPending() {
         return "PENDING".equals(value);

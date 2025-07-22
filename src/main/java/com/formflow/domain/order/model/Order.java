@@ -1,8 +1,10 @@
 package com.formflow.domain.order.model;
 
+import lombok.Getter;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+@Getter
 public class Order {
     private Long id;
     private String title;
@@ -90,21 +92,6 @@ public class Order {
         this.updatedAt = LocalDateTime.now();
     }
 
-    // Getters
-    public Long getId() { return id; }
-    public String getTitle() { return title; }
-    public String getDescription() { return description; }
-    public Category getCategory() { return category; }
-    public Priority getPriority() { return priority; }
-    public Status getStatus() { return status; }
-    public Long getCreatorId() { return creatorId; }
-    public Long getAssigneeId() { return assigneeId; }
-    public Long getGroupId() { return groupId; }
-    public Long getTeamId() { return teamId; }
-    public LocalDateTime getDueDate() { return dueDate; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public LocalDateTime getCompletedAt() { return completedAt; }
 
     @Override
     public boolean equals(Object o) {
